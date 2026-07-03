@@ -1,0 +1,637 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إدارة صلاحيات المستخدمين{% endblock %}
+
+{% block css %}
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    :root {
+        --bg-color: #040e29;
+        --form-bg: rgba(10, 20, 35, 0.95);
+        --border-color: rgba(0, 225, 255, 0.3);
+        --accent-color: #00e1ff;
+        --text-color: #c0d8f0;
+        --glow-color: rgba(0, 225, 255, 0.5);
+        --danger-color: #ff4757;
+        --success-color: #2ed573;
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        --hover-shadow: 0 12px 40px rgba(0, 225, 255, 0.2);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'Cairo', sans-serif;
+        background: linear-gradient(135deg, #040e29 0%, #0a1a3a 100%);
+        color: var(--text-color);
+        direction: rtl;
+        min-height: 100vh;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        width: 100%;
+    }
+
+    /* الهيدر */
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px 0;
+    }
+
+    .page-title {
+        color: var(--accent-color);
+        font-weight: 700;
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+
+    .page-subtitle {
+        color: var(--text-color);
+        opacity: 0.8;
+        font-size: 1rem;
+        max-width: 500px;
+        margin: 0 auto;
+        line-height: 1.5;
+    }
+
+    /* شريط البحث */
+    .search-section {
+        margin-bottom: 25px;
+        max-width: 100%;
+    }
+
+    .search-box {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 15px 50px 15px 20px;
+        background: var(--form-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-color);
+        font-family: 'Cairo', sans-serif;
+        font-size: 1rem;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 6px 25px rgba(0, 225, 255, 0.4);
+    }
+
+    .search-input::placeholder {
+        color: rgba(192, 216, 240, 0.6);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--accent-color);
+        font-size: 1.2rem;
+    }
+
+    .mobile-view {
+        display: block;
+    }
+
+    .users-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .user-card {
+        background: var(--form-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .user-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent-color), transparent);
+    }
+
+    .user-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+        border-color: var(--accent-color);
+    }
+
+    .user-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-color), #0077b6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 15px;
+        font-size: 1.2rem;
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 0 15px var(--glow-color);
+    }
+
+    .user-info {
+        flex: 1;
+    }
+
+    .user-name {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--accent-color);
+        margin-bottom: 5px;
+    }
+
+    .user-email {
+        font-size: 0.85rem;
+        opacity: 0.8;
+        direction: ltr;
+        text-align: right;
+        word-break: break-all;
+    }
+
+    .user-stats {
+        display: flex;
+        justify-content: space-between;
+        margin: 15px 0;
+        padding: 15px 0;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .stat-item {
+        text-align: center;
+        flex: 1;
+    }
+
+    .stat-value {
+        display: block;
+        font-weight: 700;
+        font-size: 1.3rem;
+        color: var(--accent-color);
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        opacity: 0.8;
+        margin-top: 5px;
+    }
+
+    .user-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn {
+        flex: 1;
+        padding: 12px 15px;
+        border: none;
+        border-radius: 10px;
+        font-family: 'Cairo', sans-serif;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--accent-color), #0077b6);
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 225, 255, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 225, 255, 0.4);
+    }
+
+    .desktop-view {
+        display: none;
+    }
+
+    .table-container {
+        background: var(--form-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+    }
+
+    .table-header {
+        background: linear-gradient(135deg, rgba(0, 225, 255, 0.1), rgba(0, 119, 182, 0.1));
+        padding: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .custom-table th {
+        background: rgba(0, 225, 255, 0.05);
+        padding: 18px 15px;
+        text-align: right;
+        font-weight: 600;
+        color: var(--accent-color);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .custom-table td {
+        padding: 15px;
+        border-bottom: 1px solid var(--border-color);
+        text-align: right;
+    }
+
+    .custom-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .custom-table tr:hover {
+        background: rgba(0, 225, 255, 0.03);
+    }
+
+    .badge-privilege {
+        background: linear-gradient(135deg, var(--accent-color), #0077b6);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-block;
+        min-width: 35px;
+        text-align: center;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .table-btn {
+        padding: 8px 15px;
+        background: linear-gradient(135deg, var(--accent-color), #0077b6);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-family: 'Cairo', sans-serif;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .table-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 225, 255, 0.3);
+    }
+
+    /* حالة عدم وجود مستخدمين */
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background: var(--form-bg);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+        grid-column: 1 / -1;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        color: var(--accent-color);
+        margin-bottom: 20px;
+        opacity: 0.7;
+    }
+
+    .empty-title {
+        font-size: 1.3rem;
+        color: var(--accent-color);
+        margin-bottom: 10px;
+    }
+
+    .empty-description {
+        opacity: 0.8;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 15px;
+        }
+
+        .mobile-view {
+            display: block;
+        }
+
+        .desktop-view {
+            display: none;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .user-stats {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .user-actions {
+            flex-direction: column;
+        }
+
+        .search-input {
+            font-size: 0.9rem;
+            padding: 12px 45px 12px 15px;
+        }
+    }
+
+    @media (min-width: 769px) {
+        .mobile-view {
+            display: none;
+        }
+
+        .desktop-view {
+            display: block;
+        }
+
+        .container {
+            padding: 30px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .user-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .user-avatar {
+            margin-left: 0;
+            margin-bottom: 10px;
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+        }
+
+        .user-card {
+            padding: 15px;
+        }
+    }
+
+    /* تأثيرات دخول للبطاقات */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .user-card {
+        animation: fadeInUp 0.5s ease forwards;
+    }
+
+    .user-card:nth-child(2) { animation-delay: 0.1s; }
+    .user-card:nth-child(3) { animation-delay: 0.2s; }
+    .user-card:nth-child(4) { animation-delay: 0.3s; }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include "pages/parts/navbar.html" %}
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">إدارة صلاحيات المستخدمين</h1>
+            <p class="page-subtitle">اختر مستخدماً من القائمة أدناه لإدارة الصلاحيات الممنوحة له</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="ابحث عن مستخدم..." id="searchInput">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+        </div>
+
+        <div class="mobile-view">
+            <div class="users-grid" id="mobileUsersGrid">
+                {% for user in users %}
+                <div class="user-card" data-username="{{ user.username|lower }}" data-email="{{ user.email|lower }}">
+                    <div class="user-header">
+                        <div class="user-avatar">
+                            {{ user.username|slice:":1"|upper }}
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name">{{ user.username }}</div>
+                            <div class="user-email">{{ user.email }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ user.id }}</span>
+                            <span class="stat-label">المعرف</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ user.privilege_count }}</span>
+                            <span class="stat-label">الصلاحيات</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">
+                                {% if user.is_active %}
+                                <i class="fas fa-circle" style="color: var(--success-color); font-size: 0.8rem;"></i>
+                                {% else %}
+                                <i class="fas fa-circle" style="color: var(--danger-color); font-size: 0.8rem;"></i>
+                                {% endif %}
+                            </span>
+                            <span class="stat-label" hid>الحالة</span>
+                        </div>
+                    </div>
+                    
+                    <div class="user-actions">
+                        <a href="{% url 'manage_privileges' user.id %}" class="btn btn-primary">
+                            <i class="fas fa-cog"></i>
+                            إدارة الصلاحيات
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="empty-title">لا يوجد مستخدمين</h3>
+                    <p class="empty-description">
+                        لا توجد بيانات مستخدمين لعرضها في الوقت الحالي.
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="desktop-view">
+            <div class="table-container">
+                <div class="table-header">
+                    <h3 style="color: var(--accent-color); margin: 0; font-size: 1.3rem;">قائمة المستخدمين والنظام</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">المعرف</th>
+                                <th>اسم المستخدم</th>
+                                <th>البريد الإلكتروني</th>
+                                <th style="width: 100px;">الصلاحيات</th>
+                                <th style="width: 100px;">الحالة</th>
+                                <th style="width: 150px;">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="desktopTableBody">
+                            {% for user in users %}
+                            <tr data-username="{{ user.username|lower }}" data-email="{{ user.email|lower }}">
+                                <td><strong>{{ user.id }}</strong></td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-color), #0077b6); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem;">
+                                            {{ user.username|slice:":1"|upper }}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 700; color: var(--accent-color);">{{ user.username }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td class="text-center">
+                                    <span class="badge-privilege">{{ user.privilege_count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if user.is_active %}
+                                    <span style="color: var(--success-color); font-weight: 600;">
+                                        <i class="fas fa-circle" style="font-size: 0.7rem; margin-left: 5px;"></i>نشط
+                                    </span>
+                                    {% else %}
+                                    <span style="color: var(--danger-color); font-weight: 600;">
+                                        <i class="fas fa-circle" style="font-size: 0.7rem; margin-left: ;"></i>غير نشط
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="table-actions">
+                                        <a href="{% url 'manage_privileges' user.id %}" class="table-btn">
+                                            <i class="fas fa-cog"></i>
+                                            إدارة الصلاحيات
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px;">
+                                    <div style="color: var(--text-color); opacity: 0.7;">
+                                        <i class="fas fa-users" style="font-size: 2.5rem; margin-bottom: 15px; display: block;"></i>
+                                        لا توجد بيانات مستخدمين لعرضها
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const mobileCards = document.querySelectorAll('.user-card');
+            const desktopRows = document.querySelectorAll('.custom-table tbody tr');
+            
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                
+                // البحث في بطاقات الجوال
+                mobileCards.forEach(card => {
+                    const username = card.getAttribute('data-username');
+                    const email = card.getAttribute('data-email');
+                    
+                    if (username.includes(searchTerm) || email.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                desktopRows.forEach(row => {
+                    if (row.cells.length > 1) {
+                        const username = row.getAttribute('data-username');
+                        const email = row.getAttribute('data-email');
+                        
+                        if (username.includes(searchTerm) || email.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

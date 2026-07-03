@@ -1,0 +1,696 @@
+{% extends "base.html" %}
+
+{% block title %}تم رفض الوصول{% endblock %}
+
+{% block css %}
+<style>
+:root {
+    --bg-color: #0a0f25;
+    --gradient-1: #ff416c;
+    --gradient-2: #ff4b2b;
+    --gradient-3: #ff6b6b;
+    --text-color: #ffffff;
+    --card-bg: rgba(20, 20, 40, 0.95);
+    --border-color: rgba(255,255,255,0.2);
+    --glow-color: rgba(255, 65, 108, 0.5);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow-x: hidden;
+    position: relative;
+}
+
+.no-access-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.background-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.floating-shapes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.1;
+    animation: float 8s ease-in-out infinite;
+    filter: blur(1px);
+}
+
+.shape:nth-child(1) {
+    width: 200px;
+    height: 200px;
+    top: 10%;
+    left: 5%;
+    background: linear-gradient(45deg, var(--gradient-1), var(--gradient-2));
+    animation-delay: 0s;
+}
+
+.shape:nth-child(2) {
+    width: 150px;
+    height: 150px;
+    top: 60%;
+    right: 10%;
+    background: linear-gradient(45deg, var(--gradient-2), var(--gradient-3));
+    animation-delay: 2s;
+}
+
+.shape:nth-child(3) {
+    width: 120px;
+    height: 120px;
+    bottom: 20%;
+    left: 15%;
+    background: linear-gradient(45deg, var(--gradient-3), var(--gradient-1));
+    animation-delay: 4s;
+}
+
+.shape:nth-child(4) {
+    width: 180px;
+    height: 180px;
+    top: 30%;
+    right: 20%;
+    background: linear-gradient(45deg, var(--gradient-1), var(--gradient-3));
+    animation-delay: 6s;
+}
+
+.grid-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridMove 25s linear infinite;
+}
+
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: var(--gradient-1);
+    border-radius: 50%;
+    animation: particleFloat 6s linear infinite;
+    opacity: 0;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+    33% {
+        transform: translateY(-30px) rotate(120deg) scale(1.1);
+    }
+    66% {
+        transform: translateY(15px) rotate(240deg) scale(0.9);
+    }
+}
+
+@keyframes gridMove {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(60px, 60px);
+    }
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translateY(100vh) translateX(0) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.7;
+    }
+    90% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(-100px) translateX(100px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes cardEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(50px) scale(0.9) rotateX(10deg);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotateX(0);
+    }
+}
+
+@keyframes iconGlow {
+    0%, 100% {
+        box-shadow: 
+            0 0 20px rgba(255, 65, 108, 0.3),
+            0 0 40px rgba(255, 75, 43, 0.2),
+            inset 0 2px 0 rgba(255, 255, 255, 0.1);
+    }
+    50% {
+        box-shadow: 
+            0 0 30px rgba(255, 65, 108, 0.5),
+            0 0 60px rgba(255, 75, 43, 0.3),
+            inset 0 2px 0 rgba(255, 255, 255, 0.2);
+    }
+}
+
+@keyframes rotate3D {
+    0% {
+        transform: rotateY(0deg) rotateX(0deg);
+    }
+    25% {
+        transform: rotateY(90deg) rotateX(10deg);
+    }
+    50% {
+        transform: rotateY(180deg) rotateX(0deg);
+    }
+    75% {
+        transform: rotateY(270deg) rotateX(-10deg);
+    }
+    100% {
+        transform: rotateY(360deg) rotateX(0deg);
+    }
+}
+
+.access-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(25px);
+    border: 1px solid var(--border-color);
+    border-radius: 28px;
+    padding: 50px 40px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 
+        0 25px 80px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+    animation: cardEntrance 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 10;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+}
+
+.access-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--gradient-1), var(--gradient-2), var(--gradient-3));
+    z-index: 2;
+}
+
+.access-card::after {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 65, 108, 0.15) 0%, transparent 60%);
+    animation: pulse 6s ease-in-out infinite;
+    z-index: 1;
+}
+
+.icon-container {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 30px;
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.main-icon {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: white;
+    animation: iconGlow 3s ease-in-out infinite;
+    transform-style: preserve-3d;
+    position: relative;
+    z-index: 2;
+}
+
+.icon-ring {
+    position: absolute;
+    top: -12px;
+    left: -12px;
+    right: -12px;
+    bottom: -12px;
+    border: 3px solid transparent;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2), var(--gradient-3));
+    background-clip: padding-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: rotate3D 8s linear infinite;
+}
+
+.icon-ring::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 12px;
+    background: var(--gradient-1);
+    border-radius: 50%;
+    box-shadow: 0 0 20px var(--glow-color);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+h1 {
+    font-size: 2.4em;
+    font-weight: 800;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2), var(--gradient-3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+    text-shadow: 0 4px 20px rgba(255, 65, 108, 0.3);
+}
+
+.subtitle {
+    font-size: 1.2em;
+    margin-bottom: 35px;
+    opacity: 0.9;
+    line-height: 1.6;
+    font-weight: 400;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.features-list {
+    text-align: center;
+    margin: 30px 0;
+    padding: 0 20px;
+}
+
+.feature-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 15px 15px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.feature-icon {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+}
+
+.feature-text {
+    font-size: 0.95em;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+.btn {
+    padding: 18px 32px;
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1em;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+    color: white;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    min-width: 200px;
+    box-shadow: 
+        0 8px 25px rgba(255, 65, 108, 0.3),
+        0 2px 0 rgba(255, 255, 255, 0.1);
+    transform: translateZ(0);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s;
+}
+
+.btn:hover {
+    transform: translateY(-4px) translateZ(0);
+    box-shadow: 
+        0 15px 35px rgba(255, 65, 108, 0.5),
+        0 4px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn:active {
+    transform: translateY(2px) translateZ(0);
+    box-shadow: 
+        0 4px 15px rgba(255, 65, 108, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.contact-info {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.contact-text {
+    font-size: 0.95em;
+    opacity: 0.7;
+    margin-bottom: 10px;
+}
+
+.admin-contact {
+    color: var(--gradient-1);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1em;
+}
+
+.admin-contact:hover {
+    color: var(--gradient-2);
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    body {
+        font-size: 15px;
+        padding: 15px;
+    }
+    
+    .access-card {
+        padding: 40px 30px;
+        border-radius: 24px;
+        max-width: 400px;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+    
+    .subtitle {
+        font-size: 1.1em;
+    }
+    
+    .icon-container {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 25px;
+    }
+    
+    .main-icon {
+        font-size: 40px;
+    }
+    
+    .btn {
+        padding: 16px 28px;
+        font-size: 1em;
+        min-width: 180px;
+    }
+    
+    .feature-item {
+        margin: 0 10px 12px;
+        padding: 10px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        font-size: 14px;
+        padding: 10px;
+    }
+    
+    .access-card {
+        padding: 35px 25px;
+        border-radius: 20px;
+        max-width: 350px;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+    }
+    
+    .subtitle {
+        font-size: 1em;
+        margin-bottom: 25px;
+    }
+    
+    .icon-container {
+        width: 90px;
+        height: 90px;
+        margin-bottom: 20px;
+    }
+    
+    .main-icon {
+        font-size: 36px;
+    }
+    
+    .btn {
+        padding: 14px 24px;
+        font-size: 0.95em;
+        min-width: 160px;
+    }
+    
+    .features-list {
+        padding: 0 15px;
+    }
+    
+    .feature-item {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+        margin: 0 5px 10px;
+        padding: 12px 15px;
+    }
+}
+
+@media (max-width: 360px) {
+    .access-card {
+        padding: 30px 20px;
+    }
+    
+    h1 {
+        font-size: 1.6em;
+    }
+    
+    .subtitle {
+        font-size: 0.95em;
+    }
+    
+    .icon-container {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .main-icon {
+        font-size: 32px;
+    }
+    
+    .btn {
+        padding: 12px 20px;
+        min-width: 140px;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .btn:hover {
+        transform: none;
+    }
+    
+    .btn:active {
+        transform: scale(0.98);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="no-access-container">
+    <div class="access-card">
+        <div class="icon-container">
+            <div class="main-icon">
+                <i class="fas fa-ban"></i>
+            </div>
+            <div class="icon-ring"></div>
+        </div>
+
+        <h1>تم رفض الوصول</h1>
+        <div class="subtitle">ليس لديك الصلاحيات المطلوبة للوصول إلى هذه الصفحة</div>
+
+        <div class="features-list">
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <span class="feature-text">صلاحيات إدارية مطلوبة</span>
+            </div>
+
+        </div>
+
+        <a href="{% url "home" %}" class="btn">
+            <i class="fas fa-home"></i>
+            العودة للصفحة الرئيسية
+        </a>
+
+        <div class="contact-info">
+            <div class="contact-text">تحتاج إلى وصول؟ تواصل مع المسؤول</div>
+            <a href="mailto:admin@system.com" class="admin-contact">
+                <i class="fas fa-envelope"></i>
+                koderfx@gmail.com
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="background-animation">
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+    <div class="grid-lines"></div>
+</div>
+
+<div class="particles" id="particlesContainer"></div>
+
+<script>
+    function createParticles() {
+        const container = document.getElementById('particlesContainer');
+        const particleCount = 40;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            const size = 2 + Math.random() * 3;
+            const left = Math.random() * 100;
+            const delay = Math.random() * 6;
+            const duration = 4 + Math.random() * 4;
+            
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${left}vw`;
+            particle.style.animationDelay = `${delay}s`;
+            particle.style.animationDuration = `${duration}s`;
+            particle.style.background = `linear-gradient(45deg, var(--gradient-1), var(--gradient-2))`;
+            particle.style.opacity = Math.random() * 0.6 + 0.2;
+            
+            container.appendChild(particle);
+        }
+    }
+
+    {% comment %} document.addEventListener('DOMContentLoaded', function() {
+        createParticles();
+        
+        if ('ontouchstart' in window) {
+            document.body.classList.add('touch-device');
+        }
+    }); {% endcomment %}
+</script>
+{% endblock %}

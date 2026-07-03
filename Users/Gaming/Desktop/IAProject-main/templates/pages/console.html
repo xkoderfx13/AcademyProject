@@ -1,0 +1,559 @@
+{% extends "base.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    {% block title %} لوحة التحكم {% endblock %}
+    {% block css %}
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{% static 'css/console.css' %}">
+    {% endblock %}
+</head>
+{% block body %}
+    <div class="background-grid"></div>
+    {% include "pages/parts/navbar.html" %}
+
+    <div class="container">
+        <div class="dashboard">
+            {% if can_add %}
+            <div class="card">
+                <h2><i class="fas fa-user-plus"></i> إضافة عضو / مسؤول جديد</h2>
+                
+                <div id="addAlert" class="alert"></div>
+
+                <form id="addUserForm" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    
+                    <div class="form-group">
+                        <label for="username"><i class="fas fa-user"></i> اسم المستخدم</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email"><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="first_name"><i class="fas fa-id-card"></i> الاسم الأول</label>
+                        <input type="text" id="first_name" name="first_name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock"></i> كلمة المرور</label>
+                        <input type="password" id="password" name="password" required minlength="6">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="user_type"><i class="fas fa-user-shield"></i> المنصب</label>
+                        <select id="user_type" name="user_type" required>
+                            <option value="member">عضو الشؤون</option>
+                            <option value="management">مانجمينت الشؤون</option>
+                            <option value="deputy">نائب رئيس الشؤون</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="checkpoint_toggle" name="checkpoint_toggle" hidden>
+                            <label for="checkpoint_toggle" class="checkbox-label" hidden>
+                                {% comment %} <span class="checkmark"></span> {% endcomment %}
+                                <i class="fab fa-discord"></i> إعطاء رتبة بالديسكورد
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group discord-field" id="discord_id_field" style="display: none;">
+                        <label for="discord_id"><i class="fab fa-discord"></i> Discord ID</label>
+                        <input type="text" id="discord_id" name="discord_id" placeholder="123456789012345678">
+                    </div>
+
+                    <div class="form-group discord-field" id="discord_role_field" style="display: none;">
+                        <label for="discord_role"><i class="fas fa-crown"></i> رتبة الديسكورد</label>
+                        <select id="discord_role" name="discord_role">
+                            <option value="member">Internal Affairs Member</option>
+                            <option value="management">Internal Affairs Management</option>
+                            <option value="deputy">Deputy Of Internal Affairs</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> إضافة شؤون
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="card no-permission-card">
+                <div class="no-permission">
+                    <i class="fas fa-lock"></i>
+                    <h3>لا تملك صلاحية إضافة شؤون</h3>
+                    <p>يجب أن تملك صلاحية "إضافة شؤون" للوصول إلى هذه الوظيفة</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <h2><i class="fas fa-users"></i> إدارة الشؤون</h2>
+
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3 id="totalUsers">{{ users_count }}</h3>
+                        <p>إجمالي الشؤون</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="staffUsers">{{ staff_count }}</h3>
+                        <p>الإداريين</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="regularUsers">{{ regular_count }}</h3>
+                        <p>الأعضاء</p>
+                    </div>
+                </div>
+
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="ابحث عن شخص...">
+                    <span class="search-icon"><i class="fas fa-search"></i></span>
+                </div>
+                
+                <div id="deleteAlert" class="alert"></div>
+
+                <div class="users-list" id="usersList">
+                    {% for user in users %}
+                    <div class="user-item" data-username="{{ user.username }}" data-email="{{ user.email }}">
+                        <div class="user-info">
+                            <div class="user-main-info">
+                                <span class="username">{{ user.username }}</span>
+                                <span class="email">{{ user.email }}</span>
+                                {% if user.discord_id %}
+                                <span class="discord-id"><i class="fab fa-discord"></i> Discord: {{ user.discord_id }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="role {% if user.is_owner == 1 %}owner{% elif user.is_superuser == 1 %}deputy{% elif user.is_staff == 1 %}management{% else %}member{% endif %}">
+                                {% if user.is_owner == 1 %}
+                                    <i class="fas fa-crown"></i> رئيس الشؤون
+                                {% elif user.is_superuser == 1 %}
+                                    <i class="fas fa-crown"></i> نائب رئيس الشؤون
+                                {% elif user.is_staff == 1 %}
+                                    <i class="fas fa-user-shield"></i> مانجمينت الشؤون
+                                {% else %}
+                                    <i class="fas fa-user"></i> عضو الشؤون
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="user-actions">
+                            {% if can_edit and not user.is_owner and user.username != request.user.username %}
+                            <button class="btn btn-edit" onclick="openEditModal({{ user.id }}, '{{ user.username }}', '{{ user.email }}', '{{ user.first_name }}', '{{ user.discord_id }}', 
+                                {% if user.is_superuser == 1 %}'deputy'
+                                {% elif user.is_staff == 1 %}'management'
+                                {% else %}'member'
+                                {% endif %})">
+                                <i class="fas fa-edit"></i> تعديل
+                            </button>
+                            {% endif %}
+                            
+                            {% if can_delete and not user.is_owner and user.username != request.user.username %}
+                            <form method="post" class="delete-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <button type="submit" class="btn btn-danger" onclick="return confirmDelete(event, this)">
+                                    <i class="fas fa-trash-alt"></i> حذف
+                                </button>
+                            </form>
+                            {% endif %}
+                            
+                            {% if not can_edit and not can_delete and not user.is_owner and user.username != request.user.username %}
+                            <div class="no-permission-small">
+                                <i class="fas fa-lock"></i>
+                                <span>لا تملك صلاحية التعديل أو الحذف</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> تعديل بيانات الشؤون</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" id="edit_user_id" name="user_id">
+                    
+                    <div class="form-group">
+                        <label for="edit_username"><i class="fas fa-user"></i> اسم المستخدم</label>
+                        <input type="text" id="edit_username" name="username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_email"><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
+                        <input type="email" id="edit_email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_first_name"><i class="fas fa-id-card"></i> الاسم الأول</label>
+                        <input type="text" id="edit_first_name" name="first_name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_discord_id"><i class="fab fa-discord"></i> Discord ID</label>
+                        <input type="text" id="edit_discord_id" name="discord_id" placeholder="123456789012345678">
+                    </div>
+
+                    <div class="checkbox-group">
+                        <label style="margin-bottom: 15px; display: block; color: var(--accent-color); font-weight: 600;">
+                            <i class="fas fa-user-shield"></i> الرتبة
+                        </label>
+                        
+                        <div class="checkbox-item" data-value="member">
+                            <input type="radio" id="role_member" name="user_type" value="member" class="role-checkbox">
+                            <label for="role_member" class="role-label">
+                                <span class="role-icon"></span>
+                                <div>
+                                    <div class="role-name">عضو الشؤون</div>
+                                    <div class="role-description">صلاحيات محدودة للوصول والتعديل</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="checkbox-item" data-value="management">
+                            <input type="radio" id="role_management" name="user_type" value="management" class="role-checkbox">
+                            <label for="role_management" class="role-label">
+                                <span class="role-icon"></span>
+                                <div>
+                                    <div class="role-name">مانجمينت الشؤون</div>
+                                    <div class="role-description">صلاحيات إدارية متوسطة</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="checkbox-item" data-value="deputy">
+                            <input type="radio" id="role_deputy" name="user_type" value="deputy" class="role-checkbox">
+                            <label for="role_deputy" class="role-label">
+                                <span class="role-icon"></span>
+                                <div>
+                                    <div class="role-name">نائب رئيس الشؤون</div>
+                                    <div class="role-description">أعلى صلاحيات إدارية</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-save"></i> حفظ التعديلات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const checkpointToggle = document.getElementById('checkpoint_toggle');
+        if (checkpointToggle) {
+            const discordIdField = document.getElementById('discord_id_field');
+            const discordRoleField = document.getElementById('discord_role_field');
+
+            checkpointToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    discordIdField.style.display = 'block';
+                    discordRoleField.style.display = 'block';
+                    document.getElementById('discord_id').required = true;
+                } else {
+                    discordIdField.style.display = 'none';
+                    discordRoleField.style.display = 'none';
+                    document.getElementById('discord_id').required = false;
+                }
+            });
+        }
+
+        const searchInput = document.getElementById('searchInput');
+        const userItems = document.querySelectorAll('.user-item');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            userItems.forEach(item => {
+                const username = item.getAttribute('data-username').toLowerCase();
+                const email = item.getAttribute('data-email').toLowerCase();
+                
+                if (username.includes(searchTerm) || email.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        function confirmDelete(event, button) {
+            event.preventDefault();
+            
+            const form = button.closest('form');
+            const userItem = form.closest('.user-item');
+            const username = userItem.getAttribute('data-username');
+            const userRole = userItem.querySelector('.role').textContent.trim();
+            
+            Swal.fire({
+                title: 'تأكيد الحذف',
+                html: `
+                    <div style="text-align: right;">
+                        <p style="color: #ff6b6b; margin-bottom: 15px; font-weight: bold;">هل أنت متأكد من حذف المستخدم التالي؟</p>
+                        <div style="background: rgba(255, 107, 107, 0.1); padding: 15px; border-radius: 8px; border: 1px solid #ff6b6b;">
+                            <p style="margin: 8px 0;"><strong>اسم المستخدم:</strong> ${username}</p>
+                            <p style="margin: 8px 0;"><strong>الرتبة:</strong> ${userRole}</p>
+                            <p style="margin: 8px 0; color: #ffa726;">
+                                <i class="fas fa-exclamation-triangle"></i> سيتم إزالة رتبة الديسكورد أيضاً
+                            </p>
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، احذف',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#ff6b6b',
+                cancelButtonColor: '#4ecdc4',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData(form);
+                    
+                    userItem.style.opacity = '0.6';
+                    
+                    fetch('', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'تم الحذف!',
+                                text: data.message,
+                                icon: 'success',
+                                confirmButtonText: 'حسناً'
+                            });
+                            
+                            userItem.style.transition = 'all 0.3s ease';
+                            userItem.style.height = userItem.offsetHeight + 'px';
+                            setTimeout(() => {
+                                userItem.style.height = '0';
+                                userItem.style.padding = '0';
+                                userItem.style.margin = '0';
+                                userItem.style.opacity = '0';
+                                userItem.style.overflow = 'hidden';
+                            }, 100);
+                            
+                            setTimeout(() => {
+                                userItem.remove();
+                                location.reload();
+                            }, 400);
+                        } else {
+                            Swal.fire({
+                                title: 'خطأ!',
+                                text: data.message,
+                                icon: 'error',
+                                confirmButtonText: 'حسناً'
+                            });
+                            userItem.style.opacity = '1';
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'خطأ في الاتصال!',
+                            text: 'حدث خطأ أثناء حذف المستخدم',
+                            icon: 'error',
+                            confirmButtonText: 'حسناً'
+                        });
+                        userItem.style.opacity = '1';
+                    });
+                }
+            });
+            
+            return false;
+        }
+
+        const addUserForm = document.getElementById('addUserForm');
+        if (addUserForm) {
+            addUserForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalText = submitButton.innerHTML;
+                
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإضافة...';
+                
+                fetch('', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'تم الإضافة!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: 'حسناً'
+                        });
+                        
+                        this.reset();
+                        if (document.getElementById('discord_id_field')) {
+                            document.getElementById('discord_id_field').style.display = 'none';
+                            document.getElementById('discord_role_field').style.display = 'none';
+                            document.getElementById('checkpoint_toggle').checked = false;
+                        }
+                        
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        Swal.fire({
+                            title: 'خطأ!',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonText: 'حسناً'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'خطأ في الاتصال!',
+                        text: 'حدث خطأ أثناء إضافة المستخدم',
+                        icon: 'error',
+                        confirmButtonText: 'حسناً'
+                    });
+                })
+                .finally(() => {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                });
+            });
+        }
+
+        function openEditModal(userId, username, email, firstName, discordId, userType) {
+            document.getElementById('edit_user_id').value = userId;
+            document.getElementById('edit_username').value = username;
+            document.getElementById('edit_email').value = email;
+            document.getElementById('edit_first_name').value = firstName || '';
+            document.getElementById('edit_discord_id').value = discordId || '';
+            
+            document.querySelectorAll('.role-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.closest('.checkbox-item').classList.remove('selected');
+            });
+            
+            const selectedCheckbox = document.querySelector(`#role_${userType}`);
+            if (selectedCheckbox) {
+                selectedCheckbox.checked = true;
+                selectedCheckbox.closest('.checkbox-item').classList.add('selected');
+            }
+            
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        document.querySelector('.close-modal').addEventListener('click', closeEditModal);
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+
+        document.querySelectorAll('.checkbox-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const checkbox = this.querySelector('.role-checkbox');
+                checkbox.checked = true;
+                
+                document.querySelectorAll('.checkbox-item').forEach(i => {
+                    i.classList.remove('selected');
+                });
+                
+                this.classList.add('selected');
+            });
+        });
+
+        document.getElementById('editUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+            
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'تم التحديث!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonText: 'حسناً'
+                    });
+                    
+                    closeEditModal();
+                    
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    Swal.fire({
+                        title: 'خطأ!',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonText: 'حسناً'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'خطأ في الاتصال!',
+                    text: 'حدث خطأ أثناء تحديث المستخدم',
+                    icon: 'error',
+                    confirmButtonText: 'حسناً'
+                });
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            });
+        });
+    </script>
+{% endblock %}
+</html>

@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}النقاط{% endblock %}
+{% block css %}
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="{% static 'css/statistics.css' %}">
+{% endblock %}
+    
+{% block body %}
+    <div class="background-grid"></div>
+    {% include "pages/parts/navbar.html" %}
+    <div class="container">
+        <div class="user-stats">
+            <div class="stat-card main-stat">
+                <i class="fas fa-user stat-icon"></i>
+                <div class="stat-value">{{ request.user.username }}</div>
+                <div class="stat-label">اسم المستخدم</div>
+            </div>
+            
+            <div class="stat-card">
+                <i class="fas fa-star stat-icon"></i>
+                <div class="stat-value">{{ user_points }}</div>
+                <div class="stat-label">إجمالي النقاط</div>
+            </div>
+            
+            <div class="stat-card">
+                <i class="fas fa-trophy stat-icon"></i>
+                <div class="stat-value">{{ user_rank }}</div>
+                <div class="stat-label">المركز</div>
+            </div>
+            
+            <div class="stat-card">
+                <i class="fas fa-chart-line stat-icon"></i>
+                <div class="stat-value">{{ total_users }}</div>
+                <div class="stat-label">إجمالي الشؤون</div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            {% if can_give_points or can_rem_points or can_edit or can_reset_points %}
+            <button class="admin-btn" id="managePointsBtn">
+                <i class="fas fa-cog"></i>
+                إدارة النقاط
+            </button>
+            {% endif %}
+            
+            {% if can_bulk_actions or can_remove_everyone or can_add_everyone %}
+            <button class="admin-btn secondary" id="bulkActionsBtn">
+                <i class="fas fa-layer-group"></i>
+                إجراءات جماعية
+            </button>
+            {% endif %}
+        </div>
+
+        <div id="alertMessage" class="alert" style="display: none;"></div>
+
+        <div class="stat-card chart-card">
+            <h3 style="color: var(--accent-color); margin-bottom: 20px; text-align: center;">
+                <i class="fas fa-chart-bar"></i> توزيع النقاط
+            </h3>
+            <div class="chart-container">
+                <canvas id="pointsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="ranking-header">
+                <h3 style="color: var(--accent-color); margin-bottom: 20px;">
+                    <i class="fas fa-trophy"></i> ترتيب الأعضاء حسب النقاط
+                </h3>
+                <div class="ranking-controls">
+                    <input type="text" id="searchUsers" placeholder="ابحث عن عضو..." class="search-input">
+                </div>
+            </div>
+            <div class="users-ranking" id="usersRanking">
+                {% for user in all_users %}
+                <div class="user-rank-item {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% endif %} {% if user.id == request.user.id %}current-user{% endif %}" 
+                     data-username="{{ user.username|lower }}" 
+                     data-points="{{ user.points }}">
+                    <span class="rank-number">#{{ forloop.counter }}</span>
+                    <span class="rank-username">
+                        {{ user.username }}
+                        {% if user.id == request.user.id %}
+                        <span class="rank-username">
+                            {% if user.id == request.user.id %}
+                            <span class="you-badge">⭐ حسابك</span>
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </span>
+                    <span class="rank-points">{{ user.points }} نقطة</span>
+                    {% if forloop.counter == 1 %}
+                        <i class="fas fa-crown rank-medal" style="color: #FFD700;"></i>
+                    {% elif forloop.counter == 2 %}
+                        <i class="fas fa-medal rank-medal" style="color: #C0C0C0;"></i>
+                    {% elif forloop.counter == 3 %}
+                        <i class="fas fa-medal rank-medal" style="color: #CD7F32;"></i>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div id="pointsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-star"></i> إدارة النقاط</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            
+            <form id="pointsForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_points">
+                
+                <div class="form-group">
+                    <label for="userSelect"><i class="fas fa-user"></i> اختر العضو</label>
+                    <select id="userSelect" name="user_id" required>
+                        <option value="">-- اختر العضو --</option>
+                        {% for user in all_users %}
+                            {% if user.id != request.user.id %}
+                            <option value="{{ user.id }}" data-current-points="{{ user.points }}">
+                                {{ user.username }} ({{ user.points }} نقطة)
+                            </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="pointsAmount"><i class="fas fa-hashtag"></i> عدد النقاط</label>
+                    <input type="number" id="pointsAmount" name="points" required min="1" max="1000" placeholder="أدخل عدد النقاط">
+                </div>
+
+                <div class="form-group">
+                    <label for="operationType"><i class="fas fa-exchange-alt"></i> نوع العملية</label>
+                    <select id="operationType" name="operation_type" required>
+                        {% if can_give_points %}<option value="add">إضافة نقاط</option>{% endif %}
+                        {% if can_rem_points %}<option value="subtract">خصم نقاط</option>{% endif %}
+                        {% if can_decrease_points %}<option value="decrease">تصغير نقاط</option>{% endif %}
+                    </select>
+                </div>
+                
+                <div class="modal-actions">
+                    {% if can_reset_points %}
+                    <button type="button" class="btn btn-danger" id="resetPointsBtn">
+                        <i class="fas fa-undo"></i> تصفير النقاط
+                    </button>
+                    {% endif %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> تأكيد التعديل
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="bulkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-layer-group"></i> الإجراءات الجماعية</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            
+            <form id="bulkForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="bulk_points">
+                
+                <div class="form-group">
+                    <label for="bulkOperation"><i class="fas fa-cogs"></i> نوع العملية</label>
+                    <select id="bulkOperation" name="bulk_operation" required>
+                        {% if can_add_everyone %}<option value="add_all">إضافة نقاط للجميع</option>{% endif %}
+                        {% if can_remove_everyone %}<option value="reset_all">تصفير نقاط الجميع</option>{% endif %}
+                    </select>
+                </div>
+                
+                <div class="form-group" id="bulkPointsGroup">
+                    <label for="bulkPoints"><i class="fas fa-hashtag"></i> عدد النقاط</label>
+                    <input type="number" id="bulkPoints" name="bulk_points" min="1" max="100" placeholder="عدد النقاط للإضافة">
+                </div>
+
+                <div class="bulk-info">
+                    <i class="fas fa-users"></i>
+                    <span>هذا الإجراء سيؤثر على جميع الأعضاء ({{ total_users }} عضو)</span>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-warning" id="confirmBulkBtn">
+                        <i class="fas fa-play"></i> تنفيذ الإجراء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function initChart() {
+            const ctx = document.getElementById('pointsChart').getContext('2d');
+            const pointsData = {{ all_users|slice:":10"|safe }}.map(user => user.points);
+            const usernames = {{ all_users|slice:":10"|safe }}.map(user => user.username);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: usernames,
+                    datasets: [{
+                        label: 'النقاط',
+                        data: pointsData,
+                        backgroundColor: [
+                            '#FFD700', '#C0C0C0', '#CD7F32',
+                            '#00e1ff', '#00aaff', '#0088cc',
+                            '#0066aa', '#004488', '#002266', '#001144'
+                        ],
+                        borderColor: 'rgba(0, 225, 255, 0.8)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'أعلى 10 أعضاء في النقاط',
+                            color: '#00e1ff',
+                            font: {
+                                family: 'Cairo',
+                                size: 16
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#c0d8f0'
+                            },
+                            grid: {
+                                color: 'rgba(0, 225, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#c0d8f0',
+                                maxRotation: 45
+                            },
+                            grid: {
+                                color: 'rgba(0, 225, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initRankingFeatures() {
+            const searchInput = document.getElementById('searchUsers');
+            const rankingContainer = document.getElementById('usersRanking');
+            
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const users = Array.from(rankingContainer.querySelectorAll('.user-rank-item'));
+                
+                users.forEach(user => {
+                    const username = user.getAttribute('data-username');
+                    if (username.includes(searchTerm)) {
+                        user.style.display = 'flex';
+                    } else {
+                        user.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        const pointsModal = document.getElementById('pointsModal');
+        const bulkModal = document.getElementById('bulkModal');
+        const manageBtn = document.getElementById('managePointsBtn');
+        const bulkBtn = document.getElementById('bulkActionsBtn');
+        const closeBtns = document.querySelectorAll('.close-modal');
+
+        function closeAllModals() {
+            pointsModal.style.display = 'none';
+            bulkModal.style.display = 'none';
+        }
+
+        if (manageBtn) {
+            manageBtn.addEventListener('click', function() {
+                pointsModal.style.display = 'block';
+            });
+        }
+
+        if (bulkBtn) {
+            bulkBtn.addEventListener('click', function() {
+                bulkModal.style.display = 'block';
+            });
+        }
+
+        closeBtns.forEach(btn => {
+            btn.addEventListener('click', closeAllModals);
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target === pointsModal || event.target === bulkModal) {
+                closeAllModals();
+            }
+        });
+
+        document.getElementById('bulkOperation').addEventListener('change', function() {
+            const pointsGroup = document.getElementById('bulkPointsGroup');
+            if (this.value === 'add_all') {
+                pointsGroup.style.display = 'block';
+                document.getElementById('bulkPoints').required = true;
+            } else {
+                pointsGroup.style.display = 'none';
+                document.getElementById('bulkPoints').required = false;
+            }
+        });
+
+        document.getElementById('userSelect').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const currentPoints = selectedOption.getAttribute('data-current-points');
+            if (currentPoints) {
+                document.getElementById('pointsAmount').placeholder = `النقاط الحالية: ${currentPoints}`;
+            } else {
+                document.getElementById('pointsAmount').placeholder = 'أدخل عدد النقاط';
+            }
+        });
+
+        document.getElementById('pointsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    closeAllModals();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showAlert('حدث خطأ أثناء المعالجة', 'error');
+            });
+        });
+
+        {% if can_reset_points %}
+        document.getElementById('resetPointsBtn').addEventListener('click', function() {
+            const userId = document.getElementById('userSelect').value;
+            if (!userId) {
+                showAlert('يرجى اختيار شخص أولاً', 'error');
+                return;
+            }
+
+            closeAllModals();
+
+            Swal.fire({
+                title: 'تأكيد التصفير',
+                text: 'هل أنت متأكد من تصفير نقاط هذا الشخص؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff4757',
+                cancelButtonColor: '#00e1ff',
+                confirmButtonText: 'نعم، صفّر النقاط',
+                cancelButtonText: 'إلغاء',
+                reverseButtons: true,
+                backdrop: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                    formData.append('action', 'reset_points');
+                    formData.append('user_id', userId);
+
+                    fetch('', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert(data.message, 'success');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showAlert(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('حدث خطأ أثناء تصفير النقاط', 'error');
+                    });
+                } else {
+                    pointsModal.style.display = 'block';
+                }
+            });
+        });
+        {% endif %}
+
+        document.getElementById('confirmBulkBtn').addEventListener('click', function() {
+            const formData = new FormData(document.getElementById('bulkForm'));
+            
+            closeAllModals();
+
+            Swal.fire({
+                title: 'تأكيد الإجراء الجماعي',
+                text: 'هذا الإجراء سيؤثر على جميع الأعضاء. هل أنت متأكد؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f39c12',
+                cancelButtonColor: '#00e1ff',
+                confirmButtonText: 'نعم، قم بالتنفيذ',
+                cancelButtonText: 'إلغاء',
+                reverseButtons: true,
+                backdrop: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert(data.message, 'success');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            showAlert(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('حدث خطأ أثناء المعالجة', 'error');
+                    });
+                } else {
+                    bulkModal.style.display = 'block';
+                }
+            });
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alertMessage');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'flex';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart();
+            initRankingFeatures();
+            
+            const bulkOperation = document.getElementById('bulkOperation');
+            if (bulkOperation.value !== 'add_all') {
+                document.getElementById('bulkPointsGroup').style.display = 'none';
+            }
+        });
+    </script>
+{% endblock %}

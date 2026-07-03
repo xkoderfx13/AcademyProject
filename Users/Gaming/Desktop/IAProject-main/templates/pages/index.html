@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+
+{% endblock %}
+
+{% block title %} IA - Report {% endblock %}
+
+{% block body %}
+<div id="loading-spinner" style="display: none;">
+    <div class="spinner"></div>
+    <p>جاري الإرسال...</p>
+</div>
+
+<div class="form-wrapper animate__animated animate__fadeInUp">
+    <div class="form-header">
+        <h1>تقديم بلاغ</h1>
+    </div>
+
+    <form id="reportForm" method="post" novalidate>
+        {% csrf_token %}
+        <div class="input-group">
+            <label for="name">إسم المُخالف</label>
+            <input type="text" placeholder="ادخل اسم أو بادج المخالف" name="name" id="name" required>
+        </div>
+
+        <div class="input-group">
+            <label for="content">تفاصيل البلاغ</label>
+            <textarea placeholder="ما هي المخالفة التي قام بها؟" name="content" id="content" required></textarea>
+        </div>
+        
+        <div class="input-group">
+            <label>الأدلة</label>
+            <label for="evidenceFile" class="file-upload-label">
+                <ion-icon name="cloud-upload-outline"></ion-icon>
+                <span>إرفق المقطع أو الصورة</span>
+            </label>
+            <input type="file" id="evidenceFile" accept="video/*,image/*" required>
+            <div id="file-name-display"></div>
+        </div>
+        
+        <input type="hidden" name="evidence_url" id="evidenceUrl">
+        <button type="submit" id="submit-button">إرسال البلاغ</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+            {% for message in messages %}
+        Swal.fire({
+            title: `{% if message.tags == 'success' %}نجاح{% elif message.tags == 'error' %}خطأ{% elif message.tags == 'warning' %}تنبيه{% else %}رسالة{% endif %}`,
+            text: "{{ message|escapejs }}",
+            icon: "{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}",
+            confirmButtonText: 'موافق'
+        });
+        {% endfor %}
+        
+    document.addEventListener("DOMContentLoaded", () => {
+        const reportForm = document.getElementById('reportForm');
+        const submitBtn = document.getElementById('submit-button');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const evidenceFileInput = document.getElementById('evidenceFile');
+        const fileNameDisplay = document.getElementById('file-name-display');
+
+        if (evidenceFileInput) {
+            evidenceFileInput.addEventListener('change', () => {
+                fileNameDisplay.textContent = evidenceFileInput.files.length > 0
+                    ? `الملف المحدد: ${evidenceFileInput.files[0].name}`
+                    : '';
+            });
+        }
+        
+        
+
+        if (reportForm) {
+            reportForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!reportForm.checkValidity()) {
+                    Swal.fire({
+                        title: 'بيانات غير مكتملة',
+                        text: 'الرجاء تعبئة جميع الحقول المطلوبة.',
+                        icon: 'warning',
+                        confirmButtonText: 'موافق'
+                    });
+                    return;
+                }
+                loadingSpinner.style.display = 'flex';
+                submitBtn.disabled = true;
+                submitBtn.innerText = 'جاري الإرسال...';
+                try {
+                    const fileLink = await uploadToGofile(evidenceFileInput.files[0]);
+                    document.getElementById('evidenceUrl').value = fileLink;
+                    reportForm.submit();
+                } catch (error) {
+                    Swal.fire({
+                        title: 'فشل الإرسال',
+                        text: error.message,
+                        icon: 'error',
+                        confirmButtonText: 'موافق'
+                    });
+                    loadingSpinner.style.display = 'none';
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'إرسال البلاغ';
+                }
+            });
+        }
+
+        async function uploadToGofile(file) {
+            const formData = new FormData();
+            formData.append("file", file);
+            const response = await fetch("https://store1.gofile.io/uploadFile", { method: "POST", body: formData } );
+            const result = await response.json();
+            if (result.status !== "ok") {
+                const errorMessage = result.data ? result.data.error : "فشل الاتصال بخادم رفع الملفات.";
+                throw new Error(errorMessage);
+            }
+            return result.data.downloadPage;
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,1087 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}البلاغات{% endblock %}
+
+{% block css %}
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+    :root {
+        --bg-color: #040e29;
+        --form-bg: rgba(10, 20, 35, 0.8);
+        --border-color: rgba(0, 225, 255, 0.25);
+        --accent-color: #00e1ff;
+        --text-color: #c0d8f0;
+        --placeholder-color: #506883;
+        --glow-color: rgba(0, 225, 255, 0.4);
+        --danger-color: #ff4757;
+        --success-color: #27ae60;
+        --warning-color: #f39c12;
+        --info-color: #3498db;
+        --deleted-color: #95a5a6;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'Cairo', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        padding: 0;
+        overflow-x: hidden;
+        direction: rtl;
+        padding-top: 80px;
+    }
+
+    .navbar {
+        background: var(--form-bg);
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 20px;
+        box-shadow: 0 0 20px var(--glow-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        height: 60px;
+    }
+
+    .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .username-display {
+        font-weight: 900;
+        font-size: 1.2rem;
+        color: var(--accent-color);
+    }
+
+    .anav {
+        color: var(--text-color);
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .anav:hover {
+        background: rgba(0, 225, 255, 0.1);
+        text-decoration: underline;
+    }
+
+    .logout-icon-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .logout-icon {
+        font-size: 1.3em;
+        color: var(--accent-color);
+        transition: all 0.3s ease;
+    }
+
+    .logout-icon:hover {
+        color: var(--danger-color);
+        transform: scale(1.1);
+    }
+
+    .tooltip {
+        position: absolute;
+        bottom: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--form-bg);
+        color: var(--text-color);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.7em;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+    }
+
+    .logout-icon-wrapper:hover .tooltip {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .background-grid {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: -1;
+        background-image:
+            linear-gradient(var(--border-color) 1px, transparent 1px),
+            linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+        background-size: 80px 80px;
+        opacity: 0.1;
+        background-position: 0 0;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+        position: relative;
+        z-index: 1;
+        padding: 0 20px;
+    }
+
+    .reports-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .reports-stats {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .stat-badge {
+        background: var(--form-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 0 15px var(--glow-color);
+    }
+
+    .stat-badge.pending {
+        border-color: var(--warning-color);
+    }
+
+    .stat-badge.completed {
+        border-color: var(--success-color);
+    }
+
+    .stat-badge.total {
+        border-color: var(--accent-color);
+    }
+
+    .stat-badge.deleted {
+        border-color: var(--deleted-color);
+    }
+
+    .stat-icon {
+        font-size: 1.2em;
+    }
+
+    .stat-badge.pending .stat-icon {
+        color: var(--warning-color);
+    }
+
+    .stat-badge.completed .stat-icon {
+        color: var(--success-color);
+    }
+
+    .stat-badge.total .stat-icon {
+        color: var(--accent-color);
+    }
+
+    .stat-badge.deleted .stat-icon {
+        color: var(--deleted-color);
+    }
+
+    .stat-number {
+        font-weight: 700;
+        font-size: 1.3em;
+    }
+
+    .stat-badge.pending .stat-number {
+        color: var(--warning-color);
+    }
+
+    .stat-badge.completed .stat-number {
+        color: var(--success-color);
+    }
+
+    .stat-badge.total .stat-number {
+        color: var(--accent-color);
+    }
+
+    .stat-badge.deleted .stat-number {
+        color: var(--deleted-color);
+    }
+
+    .stat-label {
+        font-size: 0.9em;
+        opacity: 0.8;
+    }
+
+    .filters-section {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-select {
+        background: var(--form-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 8px 12px;
+        color: var(--text-color);
+        font-family: 'Cairo', sans-serif;
+        cursor: pointer;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 10px var(--glow-color);
+    }
+
+    .search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-input {
+        background: var(--form-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 8px 35px 8px 12px;
+        color: var(--text-color);
+        font-family: 'Cairo', sans-serif;
+        width: 250px;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 10px var(--glow-color);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 10px;
+        color: var(--accent-color);
+    }
+
+    .admin-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .toggle-deleted-btn {
+        background: linear-gradient(90deg, var(--deleted-color) 0%, #7f8c8d 100%);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Cairo', sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .toggle-deleted-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(149, 165, 166, 0.4);
+    }
+
+    .toggle-deleted-btn.active {
+        background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+    }
+
+    .reports-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .report-card {
+        background: var(--form-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+        box-shadow: 0 0 20px var(--glow-color);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .report-card.pending {
+        border-left: 5px solid var(--warning-color);
+    }
+
+    .report-card.completed {
+        border-left: 5px solid var(--success-color);
+    }
+
+    .report-card.deleted {
+        border-left: 5px solid var(--deleted-color);
+        opacity: 0.8;
+        background: rgba(149, 165, 166, 0.1);
+    }
+
+    .report-card-header {
+        padding: 20px 30px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .report-card-header:hover {
+        background: rgba(0, 225, 255, 0.05);
+    }
+
+    .report-card.deleted .report-card-header:hover {
+        background: rgba(149, 165, 166, 0.1);
+    }
+
+    .report-card-header h3 {
+        color: var(--accent-color);
+        font-size: 1.3em;
+        margin: 0;
+        flex: 1;
+    }
+
+    .report-card.deleted .report-card-header h3 {
+        color: var(--deleted-color);
+        text-decoration: line-through;
+    }
+
+    .report-meta {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-right: 20px;
+    }
+
+    .report-id {
+        background: rgba(0, 225, 255, 0.1);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.8em;
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    .report-card.deleted .report-id {
+        background: rgba(149, 165, 166, 0.2);
+        color: var(--deleted-color);
+    }
+
+    .report-status {
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: rgba(243, 156, 18, 0.1);
+        color: var(--warning-color);
+    }
+
+    .status-completed {
+        background: rgba(39, 174, 96, 0.1);
+        color: var(--success-color);
+    }
+
+    .status-deleted {
+        background: rgba(149, 165, 166, 0.2);
+        color: var(--deleted-color);
+    }
+
+    .toggle-icon {
+        font-size: 1.2em;
+        color: var(--accent-color);
+        transition: transform 0.3s ease;
+    }
+
+    .report-card.deleted .toggle-icon {
+        color: var(--deleted-color);
+    }
+
+    .report-card.open .toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .report-card-body {
+        padding: 0 30px;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .report-card.open .report-card-body {
+        padding: 0 30px 30px 30px;
+        max-height: 500px;
+    }
+
+    .report-card-body p {
+        margin-bottom: 20px;
+        line-height: 1.6;
+        color: var(--text-color);
+    }
+
+    .report-card.deleted .report-card-body p {
+        color: var(--deleted-color);
+    }
+
+    .main-actions-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .actions-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .evidence-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: linear-gradient(90deg, var(--info-color) 0%, #2980b9 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+        min-height: 44px;
+    }
+
+    .evidence-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    .action-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Cairo', sans-serif;
+        text-decoration: none;
+        font-size: 0.95rem;
+        min-height: 5px;
+        min-width: 120px;
+        justify-content: center;
+    }
+
+    .done-button {
+        background: linear-gradient(90deg, var(--success-color) 0%, #2ecc71 100%);
+        color: white;
+    }
+
+    .done-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(39, 174, 96, 0.4);
+    }
+
+    .delete-button {
+        background: linear-gradient(90deg, var(--danger-color) 0%, #e03040 100%);
+        color: white;
+        padding: 12px 20px;
+        width: auto;
+    }
+
+    .delete-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(255, 71, 87, 0.4);
+    }
+
+    .restore-button {
+        background: linear-gradient(90deg, var(--warning-color) 0%, #e67e22 100%);
+        color: white;
+        padding: 12px 20px;
+        min-width: 140px;
+    }
+
+    .restore-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(243, 156, 18, 0.4);
+    }
+
+    .permanent-delete-button {
+        background: linear-gradient(90deg, #8b0000 0%, #660000 100%);
+        color: white;
+        padding: 12px 20px;
+        min-width: 140px;
+    }
+
+    .permanent-delete-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(139, 0, 0, 0.4);
+    }
+
+    .status-done-text {
+        margin-top: 15px;
+        padding: 12px 18px;
+        background: rgba(39, 174, 96, 0.2);
+        border: 1px solid var(--success-color);
+        border-radius: 10px;
+        color: var(--success-color);
+        font-weight: 600;
+        text-align: center;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .no-reports {
+        text-align: center;
+        color: var(--text-color);
+        font-size: 1.2em;
+        padding: 40px;
+        background: var(--form-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+        box-shadow: 0 0 20px var(--glow-color);
+    }
+
+    .report-date {
+        color: var(--placeholder-color);
+        font-size: 0.9em;
+        margin-top: 10px;
+    }
+
+@media (max-width: 768px) {
+
+    .container {
+        padding: 0 15px;
+    }
+    
+    .reports-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .reports-stats {
+        justify-content: center;
+    }
+    
+    .filters-section {
+        justify-content: center;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+    
+    .report-card-header {
+        padding: 15px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .report-meta {
+        margin-right: 0;
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .report-card-body {
+        padding: 0 20px;
+    }
+    
+    .report-card.open .report-card-body {
+        padding: 0 20px 20px 20px;
+    }
+    
+    .main-actions-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .actions-group {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .evidence-link,
+    .action-button {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        width: 100%;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+    
+    .delete-button,
+    .restore-button,
+    .done-button,
+    .status-done-text,
+    .permanent-delete-button {
+        width: 100% !important;
+        min-width: 100% !important;
+        display: block !important;
+        text-align: center !important;
+    }
+
+    /* 🔥 تأكيد إضافي على الأزرار المطلوبة فقط */
+    .done-button,
+    .status-done-text {
+        flex: 1 1 100%;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        display: block !important;
+        text-align: center !important;
+        justify-content: center !important;
+    }
+}
+
+
+    
+
+
+    .swal2-popup {
+        background: var(--form-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 15px !important;
+        color: var(--text-color) !important;
+    }
+
+    .swal2-title {
+        color: var(--accent-color) !important;
+        font-family: 'Cairo', sans-serif !important;
+    }
+
+    .swal2-html-container {
+        color: var(--text-color) !important;
+        font-family: 'Cairo', sans-serif !important;
+    }
+
+    .swal2-confirm {
+        background: linear-gradient(90deg, var(--danger-color) 0%, #e03040 100%) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-family: 'Cairo', sans-serif !important;
+    }
+
+    .swal2-cancel {
+        background: linear-gradient(90deg, var(--accent-color) 0%, #0099cc 100%) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-family: 'Cairo', sans-serif !important;
+    }
+
+    .swal2-icon {
+        border-color: var(--accent-color) !important;
+        color: var(--accent-color) !important;
+    }
+
+ 
+
+
+</style>
+    
+{% endblock %}
+
+{% block body %}
+    <div class="background-grid"></div>
+    {% include "pages/parts/navbar.html" %}
+    <div class="container">
+        <div class="reports-header">
+            <div class="reports-stats">
+                <div class="stat-badge total">
+                    <i class="fas fa-flag stat-icon"></i>
+                    <div>
+                        <div class="stat-number">{{ active_reports_count }}</div>
+                        <div class="stat-label">البلاغات النشطة</div>
+                    </div>
+                </div>
+                <div class="stat-badge pending">
+                    <i class="fas fa-clock stat-icon"></i>
+                    <div>
+                        <div class="stat-number" id="pendingCount">{{ pending_reports_count }}</div>
+                        <div class="stat-label">قيد الانتظار</div>
+                    </div>
+                </div>
+                <div class="stat-badge completed">
+                    <i class="fas fa-check-circle stat-icon"></i>
+                    <div>
+                        <div class="stat-number" id="completedCount">{{ completed_reports_count }}</div>
+                        <div class="stat-label">مكتملة</div>
+                    </div>
+                </div>
+                {% if can_view_deleted %}
+                <div class="stat-badge deleted">
+                    <i class="fas fa-trash stat-icon"></i>
+                    <div>
+                        <div class="stat-number" id="deletedCount">{{ deleted_reports_count }}</div>
+                        <div class="stat-label">محذوفة</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="filters-section">
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">جميع البلاغات النشطة</option>
+                    <option value="pending">قيد الانتظار</option>
+                    <option value="completed">مكتملة</option>
+                    {% if can_view_deleted %}
+                    <option value="deleted">المحذوفة</option>
+                    {% endif %}
+                </select>
+
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" placeholder="ابحث في البلاغات...">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+
+                {% if can_view_deleted %}
+                <div class="admin-controls">
+                    <button class="toggle-deleted-btn" id="toggleDeletedBtn">
+                        <i class="fas fa-eye"></i>
+                        <span>عرض المحذوفة</span>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="reports-container" id="reportsContainer">
+            {% if reports %}
+                {% for report in reports %}
+                    <div class="report-card 
+                        {% if report.is_deleted %}deleted
+                        {% elif report.status == 1 %}completed
+                        {% else %}pending{% endif %}" 
+                         id="report-{{ report.id }}"
+                         data-status="{% if report.is_deleted %}deleted{% elif report.status == 1 %}completed{% else %}pending{% endif %}"
+                         data-name="{{ report.name|lower }}"
+                         data-content="{{ report.content|lower }}"
+                         {% if report.is_deleted %} style="display: none;" {% endif %}>
+                        <div class="report-card-header" onclick="toggleReportBody({{ report.id }})">
+                            <h3>
+                                {{ report.name }}
+                                {% if report.is_deleted %}
+                                <span style="color: var(--deleted-color); font-size: 0.8em;">(محذوف)</span>
+                                {% endif %}
+                            </h3>
+                            <div class="report-meta">
+                                <span class="report-id">#{{ report.id }}</span>
+                                <span class="report-status 
+                                    {% if report.is_deleted %}status-deleted
+                                    {% elif report.status == 1 %}status-completed
+                                    {% else %}status-pending{% endif %}">
+                                    {% if report.is_deleted %}
+                                        <i class="fas fa-trash"></i> محذوف
+                                    {% elif report.status == 1 %}
+                                        <i class="fas fa-check-circle"></i> تم التعامل
+                                    {% else %}
+                                        <i class="fas fa-clock"></i> قيد الانتظار
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <ion-icon name="chevron-down-outline" class="toggle-icon"></ion-icon>
+                        </div>
+                        <div class="report-card-body">
+                            <p>{{ report.content }}</p>
+
+                            <div class="main-actions-container">
+                                {% if can_see %}
+                                <div>
+                                    {% if report.evidence_url %}
+                                    <a href="{{ report.evidence_url }}" target="_blank" class="evidence-link">
+                                        <ion-icon name="eye-outline"></ion-icon> عرض الدليل
+                                    </a>
+                                    {% endif %}
+                                {% else %}
+                                    <div>
+                                    {% if report.evidence_url %}
+                                    <p></p>
+                                    {% endif %}
+                                {% endif %}
+                                </div>
+                                
+                                <div class="actions-group">
+                                    {% if not report.is_deleted %}
+                                        {% if report.status == 0 %}
+                                            {% if can_handle %}
+                                                <form method="post" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="report_id" value="{{ report.id }}">
+                                                    <button type="submit" name="mark_done" class="action-button done-button ">
+                                                        <ion-icon name="checkmark-circle-outline"></ion-icon> تم التعامل
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            
+                                            {% if can_delete_report %}
+                                                <button class="action-button delete-button" onclick="handleReport({{ report.id }}, 'soft_delete')">
+                                                    <ion-icon name="trash-outline"></ion-icon> حذف البلاغ
+                                                </button>
+                                            {% endif %}
+                                        {% else %}
+                                            <div class="status-done-text">
+                                                <i class="fas fa-user-check"></i>
+                                                تم التعامل من قبل: {{ report.closed_by_username }}
+                                            </div>
+                                            {% if can_delete_report %}
+                                                <button class="action-button delete-button" onclick="handleReport({{ report.id }}, 'soft_delete')">
+                                                    <ion-icon name="trash-outline"></ion-icon> حذف البلاغ
+                                                </button>
+                                            {% endif %}
+                                        {% endif %}
+                                        {% else %}
+                                            {% if can_restore %}
+                                                <button class="action-button restore-button" onclick="handleReport({{ report.id }}, 'restore')">
+                                                    <ion-icon name="refresh-outline"></ion-icon> استعادة البلاغ
+                                                </button>
+                                            {% endif %}
+                                            {% if can_permanent_delete %}
+                                                <button class="action-button permanent-delete-button" onclick="handleReport({{ report.id }}, 'permanent_delete')">
+                                                    <ion-icon name="skull-outline"></ion-icon> حذف نهائي
+                                                </button>
+                                            {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-reports">
+                    <ion-icon name="information-circle-outline" style="font-size: 2em; margin-bottom: 10px;"></ion-icon>
+                    <p>لا توجد بلاغات جديدة لعرضها حالياً.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function toggleReportBody(reportId) {
+            const card = document.getElementById(`report-${reportId}`);
+            card.classList.toggle('open');
+        }
+
+        function handleReport(reportId, action) {
+            let title, text, confirmText, url, method;
+            
+            switch(action) {
+                case 'soft_delete':
+                    title = 'هل أنت متأكد من حذف البلاغ؟';
+                    text = 'سيتم نقل البلاغ إلى قائمة المحذوفات.';
+                    confirmText = 'نعم، قم بالحذف!';
+                    url = '/soft-delete-report/' + reportId + '/';
+                    method = 'POST';
+                    break;
+                case 'restore':
+                    title = 'هل أنت متأكد من استعادة البلاغ؟';
+                    text = 'سيتم إعادة البلاغ إلى قائمة البلاغات النشطة.';
+                    confirmText = 'نعم، قم بالاستعادة!';
+                    url = '/restore-report/' + reportId + '/';
+                    method = 'POST';
+                    break;
+                case 'permanent_delete':
+                    title = 'هل أنت متأكد من الحذف النهائي؟';
+                    text = '⚠️ تحذير: هذا الإجراء لا يمكن التراجع عنه! سيتم حذف البلاغ نهائياً من قاعدة البيانات.';
+                    confirmText = 'نعم، احذف نهائياً!';
+                    url = '/permanent-delete-report/' + reportId + '/';
+                    method = 'POST';
+                    break;
+            }
+
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: action === 'permanent_delete' ? 'error' : 'warning',
+                showCancelButton: true,
+                confirmButtonColor: action === 'restore' ? '#f39c12' : action === 'permanent_delete' ? '#8b0000' : '#ff4757',
+                cancelButtonColor: '#00e1ff',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'إلغاء',
+                background: 'var(--form-bg)',
+                color: 'var(--text-color)',
+                customClass: {
+                    popup: 'swal2-popup',
+                    title: 'swal2-title',
+                    htmlContainer: 'swal2-html-container',
+                    confirmButton: 'swal2-confirm',
+                    cancelButton: 'swal2-cancel'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(url, {
+                        method: method,
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('نجاح!', data.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('خطأ!', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('خطأ!', 'فشل الاتصال بالخادم', 'error');
+                    });
+                }
+            });
+        }
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterReports();
+        });
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterReports();
+        });
+
+        const toggleDeletedBtn = document.getElementById('toggleDeletedBtn');
+        if (toggleDeletedBtn) {
+            toggleDeletedBtn.addEventListener('click', function() {
+                const isActive = this.classList.toggle('active');
+                const deletedReports = document.querySelectorAll('.report-card.deleted');
+                const showText = isActive ? 'إخفاء المحذوفة' : 'عرض المحذوفة';
+                const icon = isActive ? 'fa-eye-slash' : 'fa-eye';
+                
+                this.querySelector('span').textContent = showText;
+                this.querySelector('i').className = `fas ${icon}`;
+                
+                deletedReports.forEach(report => {
+                    report.style.display = isActive ? 'block' : 'none';
+                });
+                
+                filterReports();
+            });
+        }
+
+        function filterReports() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const showDeleted = toggleDeletedBtn ? toggleDeletedBtn.classList.contains('active') : false;
+            const reports = document.querySelectorAll('.report-card');
+            
+            let pendingCount = 0;
+            let completedCount = 0;
+            let deletedCount = 0;
+            let visibleCount = 0;
+
+            reports.forEach(report => {
+                const status = report.getAttribute('data-status');
+                const name = report.getAttribute('data-name');
+                const content = report.getAttribute('data-content');
+                const isDeleted = status === 'deleted';
+                
+                let shouldShow = false;
+                
+                if (isDeleted) {
+                    shouldShow = showDeleted && (statusFilter === 'all' || statusFilter === 'deleted');
+                } else {
+                    shouldShow = statusFilter === 'all' || status === statusFilter;
+                }
+                
+                const matchesSearch = !searchTerm || name.includes(searchTerm) || content.includes(searchTerm);
+                
+                if (shouldShow && matchesSearch) {
+                    report.style.display = 'block';
+                    visibleCount++;
+                    
+                    if (status === 'pending') pendingCount++;
+                    if (status === 'completed') completedCount++;
+                    if (status === 'deleted') deletedCount++;
+                } else {
+                    report.style.display = 'none';
+                }
+            });
+
+            document.getElementById('pendingCount').textContent = pendingCount;
+            document.getElementById('completedCount').textContent = completedCount;
+            if (document.getElementById('deletedCount')) {
+                document.getElementById('deletedCount').textContent = deletedCount;
+            }
+
+            const noResults = document.querySelector('.no-results');
+            if (visibleCount === 0) {
+                if (!noResults) {
+                    const container = document.getElementById('reportsContainer');
+                    const message = document.createElement('div');
+                    message.className = 'no-reports no-results';
+                    message.innerHTML = `
+                        <ion-icon name="search-outline" style="font-size: 2em; margin-bottom: 10px;"></ion-icon>
+                        <p>لا توجد بلاغات تطابق معايير البحث.</p>
+                    `;
+                    container.appendChild(message);
+                }
+            } else if (noResults) {
+                noResults.remove();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const pendingReports = document.querySelectorAll('.report-card.pending');
+            pendingReports.forEach(report => {
+                if (report.style.display !== 'none') {
+                    report.classList.add('open');
+                }
+            });
+
+            filterReports();
+        });
+
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.report-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(card);
+        });
+    </script>
+{% endblock %}

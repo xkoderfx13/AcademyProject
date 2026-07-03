@@ -1,0 +1,160 @@
+:root {
+     --accent-color-bright: #70d7ff;
+     --danger-color: #ff3860;
+     --glow-color-strong: rgba(0, 225, 255, 0.7 );
+ }
+ .login-container {
+     position: relative;
+     width: 100%;
+     max-width: 450px;
+     background: rgba(10, 20, 35, 0.6);
+     backdrop-filter: blur(15px);
+     border: 1px solid var(--border-color);
+     padding: 40px;
+     box-shadow: 0 0 50px rgba(0, 0, 0, 0.6);
+     clip-path: polygon(0 20px, 20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px));
+ }
+ .login-container::before, .login-container::after {
+     content: '';
+     position: absolute;
+     width: 50%;
+     height: 2px;
+     background: var(--accent-color-bright);
+     box-shadow: 0 0 8px var(--glow-color-strong);
+     animation: flicker 3s infinite;
+ }
+ .login-container::before { top: 0; left: 0; }
+ .login-container::after { bottom: 0; right: 0; }
+ .login-header {
+     text-align: center;
+     margin-bottom: 40px;
+ }
+ .login-header h1 {
+     font-family: 'Share Tech Mono', monospace;
+     font-size: 3rem;
+     color: var(--accent-color-bright);
+     text-shadow: 0 0 15px var(--glow-color-strong);
+     margin: 0;
+     letter-spacing: 5px;
+     border: 2px solid var(--accent-color);
+     display: inline-block;
+     padding: 5px 15px;
+     background: rgba(0, 225, 255, 0.1);
+ }
+ .input-group {
+     position: relative;
+     margin-bottom: 35px;
+ }
+ .input-group input {
+     width: 100%;
+     padding: 10px 0;
+     background: transparent;
+     border: none;
+     border-bottom: 2px solid var(--border-color);
+     color: var(--text-color);
+     font-size: 1.1rem;
+     transition: all 0.3s ease;
+ }
+ .input-group label {
+     position: absolute;
+     top: 10px;
+     right: 0;
+     color: var(--text-secondary);
+     transition: all 0.3s ease;
+     pointer-events: none;
+ }
+ .input-group input:focus,
+ .input-group input:valid {
+     outline: none;
+     border-bottom-color: var(--accent-color);
+ }
+ .input-group input:focus + label,
+ .input-group input:valid + label {
+     top: -15px;
+     font-size: 0.8rem;
+     color: var(--accent-color);
+ }
+ #submit-button {
+     width: 100%;
+     padding: 15px;
+     background: var(--accent-color);
+     border: none;
+     border-radius: 4px;
+     color: var(--bg-color);
+     font-size: 1.2rem;
+     font-weight: 700;
+     cursor: inherit;
+     transition: all 0.3s ease;
+     margin-top: 20px;
+     position: relative;
+     overflow: hidden;
+ }
+ #submit-button::after {
+     content: '';
+     position: absolute;
+     top: 0;
+     left: -100%;
+     width: 100%;
+     height: 100%;
+     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+     animation: scan 3s linear infinite;
+ }
+ #submit-button:hover:not(:disabled) {
+     box-shadow: 0 0 20px var(--glow-color-strong);
+ }
+ #submit-button:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+ .error-message {
+     background-color: rgba(255, 56, 96, 0.15);
+     border: 1px solid var(--danger-color);
+     color: #ffced3;
+     padding: 12px;
+     border-radius: 4px;
+     text-align: center;
+     margin-top: 20px;
+     font-size: 0.95rem;
+     font-family: 'Share Tech Mono', monospace;
+ }
+ @keyframes flicker {
+     0%, 100% { opacity: 1; }
+     50% { opacity: 0.5; }
+ }
+ @keyframes scan {
+     0% { left: -100%; }
+     50% { left: 100%; }
+     100% { left: 100%; }
+ }
+ @media (max-width: 600px) {
+     .login-container {
+         padding: 30px 25px;
+         background: transparent;
+         backdrop-filter: none;
+         border: none;
+         box-shadow: none;
+         clip-path: none;
+         min-height: 100vh;
+         display: flex;
+         flex-direction: column;
+         justify-content: center;
+     }
+     .login-container::before, .login-container::after {
+         display: none;
+     }
+     .login-header h1 {
+         font-size: 2.5rem;
+     }
+ }
+         .fadeIn {
+     animation: fadeIn 0.6s ease-out;
+ }
+ @keyframes fadeIn {
+     from { opacity: 0; transform: translateY(10px); }
+     to { opacity: 1; transform: translateY(0); }
+ }
+ .shake {
+     animation: shake 0.4s ease-in-out;
+ }
+ @keyframes shake {
+     0%, 100% { transform: translateX(0); }
+     20%, 60% { transform: translateX(-4px); }
+     40%, 80% { transform: translateX(4px); }
+ }

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}تسجيل دخول{% endblock %}
+
+{% block css %}
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <link rel="stylesheet" href="{% static 'css/ialogin.css' %}">
+
+{% endblock %}
+
+{% block body %}
+    <div class="login-container fadeIn">
+        <div class="login-header">
+            <h1>IA - Login</h1>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="input-group">
+                <input type="text" name="username" id="username" required>
+                <label for="username">اسم المستخدم</label>
+            </div>
+
+            <div class="input-group">
+                <input type="password" name="password" id="password" required>
+                <label for="password">كلمة المرور</label>
+            </div>
+            
+            <button type="submit" id="submit-button">تسجيل الدخول</button>
+
+            {% if error %}
+                <div class="error-message shake">
+                    <ion-icon name="warning-outline"></ion-icon>
+                    <span>{{ error }}</span>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}

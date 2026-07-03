@@ -1,0 +1,143 @@
+ :root {
+            --bg-medium-blue: #161b22;
+            --danger-color: #ff3860;
+            --success-color: #28a745;
+        }
+
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: var(--bg-medium-blue );
+            border-bottom: 1px solid var(--border-blue);
+            padding: 12px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        .navbar-brand {
+            font-family: 'Share Tech Mono', monospace; font-size: 1.4rem;
+            color: var(--accent-light-blue); text-decoration: none;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .navbar-brand .username-display {
+            padding: 5px 10px; border: 1px solid var(--border-blue);
+            border-radius: 6px; font-size: 1.1rem;
+        }
+
+        .logout-icon-wrapper { position: relative; }
+        .logout-icon {
+            font-size: 1.8rem; color:rgb(154, 154, 154); cursor: pointer;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+        .logout-icon:hover { transform: scale(1.2); color: var(--danger-color); }
+        .logout-icon-wrapper .tooltip {
+            position: absolute; top: 120%; left: 50%; transform: translateX(-50%);
+            background-color: var(--bg-dark-blue); color: var(--text-primary);
+            padding: 5px 10px; border-radius: 4px; font-size: 0.8rem;
+            white-space: nowrap; opacity: 0; visibility: hidden;
+            transition: opacity 0.2s ease; pointer-events: none;
+            border: 1px solid var(--border-blue);
+        }
+        .logout-icon-wrapper:hover .tooltip { opacity: 1; visibility: visible; }
+
+        .reports-container {
+            width: 100%; max-width: 900px; margin-top: 100px;
+            padding: 0 20px 50px 20px;
+        }
+
+        .report-card {
+            background: rgba(22, 27, 34, 0.9); 
+            border: 1px solid var(--border-blue);
+            border-radius: 8px; margin-bottom: 20px; overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+        .report-card.status-true {
+            border-color: var(--success-color);
+            background: rgba(40, 167, 69, 0.15);
+        }
+        .report-card.status-true .report-card-header .toggle-icon {
+            color: var(--success-color);
+        }
+
+        .report-card-header {
+            padding: 20px; display: flex; justify-content: space-between;
+            align-items: center; cursor: pointer;
+        }
+        .report-card-header h3 {
+            font-family: 'Share Tech Mono', monospace; font-size: 1.2rem;
+            color: var(--text-primary); margin: 0;
+        }
+        .report-card-header .toggle-icon {
+            font-size: 1.5rem; color: var(--accent-light-blue);
+            transition: transform 0.3s ease;
+        }
+        .report-card.open .toggle-icon { transform: rotate(180deg); }
+
+        .report-card-body {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+            padding: 0 20px;
+        }
+        .report-card.open .report-card-body {
+            max-height: 500px; padding: 0 20px 20px 20px;
+        }
+        .report-card-body p {
+            background: var(--bg-dark-blue); padding: 15px; border-radius: 6px;
+            margin-bottom: 15px; white-space: pre-wrap; line-height: 1.6;
+        }
+        .report-card-body strong {
+            color: var(--accent-light-blue); display: block; margin-bottom: 5px;
+        }
+        
+        .main-actions-container {
+            display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 15px;
+            justify-content: space-between;
+        }
+        .actions-group {
+            display: flex; flex-wrap: wrap; gap: 10px;
+        }
+        .evidence-link, .action-button {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 15px; border-radius: 6px; text-decoration: none;
+            font-weight: 600; transition: transform 0.2s ease; border: none;
+            font-family: 'Cairo', sans-serif; cursor: pointer;
+        }
+        .evidence-link { background: var(--accent-light-blue); color: var(--bg-dark-blue); }
+        .evidence-link:hover { transform: translateY(-2px); border: 5px solid var(--border-blue) ;}
+        
+        .done-button { background: var(--success-color); color: white; }
+        .delete-button { background: var(--danger-color); color: white; }
+
+        .status-done-text {
+            margin-top: 15px; padding: 10px; background: rgba(40, 167, 69, 0.2);
+            border-radius: 6px; color: #98e0a9; font-family: 'Share Tech Mono', monospace;
+            text-align: center;
+        }
+
+        .no-reports {
+            text-align: center; font-size: 1.2rem; color: var(--text-secondary);
+            margin-top: 50px;
+        }
+
+        @media (max-width: 600px) {
+            .navbar { padding: 10px 15px; }
+            .navbar-brand { font-size: 1rem; gap: 8px; }
+            .navbar-brand .username-display { font-size: 0.9rem; padding: 4px 8px; }
+            .logout-icon { font-size: 1.6rem; }
+            .reports-container { margin-top: 80px; padding: 0 10px 30px 10px; }
+            .report-card-header { padding: 15px; }
+            .report-card-header h3 { font-size: 1rem; }
+        }
+
+        .anav{
+            text-decoration: none;
+            color: var(--border-blue);
+            transition: 1s;
+        }
+        .anav:hover{
+            font-size: 1.5rem;
+            transition: 1s;
+            color: var(--border-blue);
+        }
+        .anav:after{
+            transition: 1s;
+            color: var(--border-blue);
+        }

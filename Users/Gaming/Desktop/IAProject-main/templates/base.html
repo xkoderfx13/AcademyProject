@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>{% block title %}My Site{% endblock %}</title>
+    <link rel="icon" href="{% static "img/images.jpg" %}">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+
+    {% block css %}{% endblock %}
+    {% block style %}{% endblock %}
+
+    <style>
+        :root {
+            --bg-color: #040e29;
+            --form-bg: rgba(10, 20, 35, 0.8);
+            --border-color: rgba(0, 225, 255, 0.25);
+            --accent-color: #00e1ff;
+            --text-color: #c0d8f0;
+            --placeholder-color: #506883;
+            --glow-color: rgba(0, 225, 255, 0.4);
+            --danger-color: #ff4757;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            direction: rtl;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%2300e1ff" stroke-width="2"><path d="M3 12h18M12 3v18"/></svg>'), auto;
+        }
+
+        .background-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            background-image:
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 80px 80px;
+            opacity: 0.1;
+            background-position: 0 0;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-grid"></div>
+    {% block body %}{% endblock %}
+    {% block js %}{% endblock %}
+</body>
+</html>
