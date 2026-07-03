@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(pip install -r \"c:\\\\Users\\\\XeusAI\\\\Desktop\\\\academyproject-main\\\\requirements.txt\")"
+    ]
+  }
+}

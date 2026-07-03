@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            animation: slideDown 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            background: linear-gradient(to right, #e2e8f0, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        .logout-btn {
+            padding: 12px 28px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--primary), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #e2e8f0, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .filter-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            color: #94a3b8;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn.active {
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ألوان خاصة للفلترات */
+        .filter-btn[data-filter="all"]:hover,
+        .filter-btn[data-filter="all"].active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .filter-btn[data-filter="trainer"]:hover,
+        .filter-btn[data-filter="trainer"].active {
+            background: linear-gradient(135deg, #FF6347, #FF4500);
+        }
+
+        .filter-btn[data-filter="cadet"]:hover,
+        .filter-btn[data-filter="cadet"].active {
+            background: linear-gradient(135deg, #9370DB, #8A2BE2);
+        }
+
+        .filter-btn[data-filter="other"]:hover,
+        .filter-btn[data-filter="other"].active {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #34d399);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .users-table {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+
+        .table-header {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .table-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .table-content {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        th {
+            padding: 1.5rem;
+            text-align: right;
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        td {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        /* ألوان البادجات حسب الرتبة */
+        .badge-police_chief {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+        }
+
+        .badge-deputy_chief {
+            background: linear-gradient(135deg, #C0C0C0, #A9A9A9);
+            color: #000;
+        }
+
+        .badge-academy_commander {
+            background: linear-gradient(135deg, #4169E1, #1E90FF);
+            color: white;
+        }
+
+        .badge-deputy_commander {
+            background: linear-gradient(135deg, #32CD32, #00FA9A);
+            color: #000;
+        }
+
+        .badge-trainer {
+            background: linear-gradient(135deg, #FF6347, #FF4500);
+            color: white;
+        }
+
+        .badge-cadet {
+            background: linear-gradient(135deg, #9370DB, #8A2BE2);
+            color: white;
+        }
+
+        .badge-other {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+        }
+
+        .action-buttons-cell {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .action-icon.view {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        }
+
+        .action-icon.edit {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        }
+
+        .action-icon.delete {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+        }
+
+        .action-icon:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 5rem;
+            color: #94a3b8;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-bar {
+                flex-direction: column;
+            }
+
+            .filter-buttons {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .action-buttons {
+                width: 100%;
+                flex-direction: column;
+            }
+        }
+
+        /* تحسينات SweetAlert */
+        .swal2-popup {
+            background: linear-gradient(145deg, #1e293b, #0f172a) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 24px !important;
+            color: #e2e8f0 !important;
+            backdrop-filter: blur(20px) !important;
+            padding: 2.5rem !important;
+        }
+
+        .swal2-title {
+            color: #e2e8f0 !important;
+            font-size: 1.8rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 1.5rem !important;
+        }
+
+        .swal2-html-container {
+            color: #94a3b8 !important;
+            font-size: 1.1rem !important;
+            margin: 1rem 0 2rem 0 !important;
+        }
+
+        .swal2-actions {
+            gap: 1.5rem !important;
+            margin-top: 2rem !important;
+        }
+
+        .swal2-confirm,
+        .swal2-cancel {
+            cursor: pointer !important;
+            padding: 12px 32px !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            transition: all 0.3s !important;
+            min-width: 120px !important;
+        }
+
+        .swal2-confirm {
+            background: linear-gradient(135deg, #ef4444, #f87171) !important;
+            border: none !important;
+        }
+
+        .swal2-confirm:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3) !important;
+        }
+
+        .swal2-cancel {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #cbd5e1 !important;
+        }
+
+        .swal2-cancel:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .swal2-icon {
+            border-color: #ef4444 !important;
+            color: #ef4444 !important;
+            margin: 1rem auto 1.5rem !important;
+        }
+
+        /* تأثير عند hover على الأزرار */
+        .swal2-confirm:hover,
+        .swal2-cancel:hover {
+            cursor: pointer !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="particles" id="particles-js"></div>
+
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-network"></i>
+                </div>
+                <div>
+                    <h1 class="title">لوحة تحكم المسؤول</h1>
+                    <p class="subtitle">مرحباً بك في نظام إدارة التدريب المتقدم</p>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                تسجيل الخروج
+            </a>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-value" id="totalUsers">{{ users|length }}</div>
+                <div class="stat-label">إجمالي المستخدمين</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="stat-value" id="trainersCount">0</div>
+                <div class="stat-label">المدربين المعتمدين</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="stat-value" id="cadetsCount">0</div>
+                <div class="stat-label">المتدربين النشطين</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-tag"></i>
+                </div>
+                <div class="stat-value" id="othersCount">0</div>
+                <div class="stat-label">مستخدمين آخرين</div>
+            </div>
+        </div>
+
+        <div class="actions-bar">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all" onclick="filterUsers('all')">
+                    الكل
+                </button>
+                <button class="filter-btn" data-filter="trainer" onclick="filterUsers('trainer')">
+                    <i class="fas fa-chalkboard-teacher"></i> المدربين
+                </button>
+                <button class="filter-btn" data-filter="cadet" onclick="filterUsers('cadet')">
+                    <i class="fas fa-user-graduate"></i> المتدربين
+                </button>
+                <button class="filter-btn" data-filter="other" onclick="filterUsers('other')">
+                    <i class="fas fa-user-tag"></i> أخرى
+                </button>
+            </div>
+
+            <div class="action-buttons">
+                {% if actor.can_manage_assignments %}
+                <a href="{% url 'admin_assignments' %}" class="action-btn btn-success">
+                    <i class="fas fa-link"></i>
+                    إدارة التعيينات
+                </a>
+                {% endif %}
+                {% if actor.can_view_applications %}
+                <a href="{% url 'admin_applications' %}" class="action-btn btn-primary">
+                    <i class="fas fa-file-signature"></i>
+                    إدارة التقديمات
+                </a>
+                {% endif %}
+                {% if actor.can_add_users %}
+                <a href="{% url 'add_user' %}" class="action-btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    إضافة مستخدم جديد
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="users-table">
+            <div class="table-header">
+                <h2><i class="fas fa-users-cog"></i> قائمة المستخدمين</h2>
+            </div>
+
+            <div class="table-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>المستخدم</th>
+                            <th>اسم المستخدم</th>
+                            <th>الرتبة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody">
+                        {% for user in users %}
+                        <tr class="user-row" data-rank="{{ user.rank }}">
+                            <td>
+                                <div class="user-info">
+                                    <div class="user-avatar" style="
+                                        {% if user.rank == 'police_chief' %}background: linear-gradient(135deg, #FFD700, #FFA500);{% endif %}
+                                        {% if user.rank == 'deputy_chief' %}background: linear-gradient(135deg, #C0C0C0, #A9A9A9);{% endif %}
+                                        {% if user.rank == 'academy_commander' %}background: linear-gradient(135deg, #4169E1, #1E90FF);{% endif %}
+                                        {% if user.rank == 'deputy_commander' %}background: linear-gradient(135deg, #32CD32, #00FA9A);{% endif %}
+                                        {% if user.rank == 'trainer' %}background: linear-gradient(135deg, #FF6347, #FF4500);{% endif %}
+                                        {% if user.rank == 'cadet' %}background: linear-gradient(135deg, #9370DB, #8A2BE2);{% endif %}
+                                        {% if not user.rank or user.rank not in 'police_chief,deputy_chief,academy_commander,deputy_commander,trainer,cadet' %}background: linear-gradient(135deg, #6366f1, #8b5cf6);{% endif %}
+                                    ">
+                                        {{ user.full_name|slice:":1" }}
+                                    </div>
+                                    <div>
+                                        <div class="user-name">{{ user.full_name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <code
+                                    style="background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 8px; font-family: monospace;">
+                                    @{{ user.username }}
+                                </code>
+                            </td>
+                            <td>
+                                {% if user.rank == 'police_chief' %}
+                                <span class="badge badge-police_chief">
+                                    <i class="fas fa-crown"></i> رئيس الشرطة
+                                </span>
+                                {% elif user.rank == 'deputy_chief' %}
+                                <span class="badge badge-deputy_chief">
+                                    <i class="fas fa-chess-queen"></i> نائب رئيس الشرطة
+                                </span>
+                                {% elif user.rank == 'academy_commander' %}
+                                <span class="badge badge-academy_commander">
+                                    <i class="fas fa-graduation-cap"></i> قائد الأكاديمية
+                                </span>
+                                {% elif user.rank == 'deputy_commander' %}
+                                <span class="badge badge-deputy_commander">
+                                    <i class="fas fa-user-shield"></i> نائب قائد الأكاديمية
+                                </span>
+                                {% elif user.rank == 'trainer' %}
+                                <span class="badge badge-trainer">
+                                    <i class="fas fa-chalkboard-teacher"></i> مدرب
+                                </span>
+                                {% elif user.rank == 'cadet' %}
+                                <span class="badge badge-cadet">
+                                    <i class="fas fa-user-graduate"></i> متدرب
+                                </span>
+                                {% else %}
+                                <span class="badge badge-other">
+                                    <i class="fas fa-user-tag"></i> أخرى
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons-cell">
+                                    <a href="{% url 'admin_member_detail' user.id %}" class="action-icon view">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'edit_user' user.id %}" class="action-icon edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="action-icon delete delete-btn" data-user-id="{{ user.id }}" data-user-name="{{ user.full_name }}">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <i class="fas fa-users-slash"></i>
+                                    <h3>لا يوجد مستخدمين مسجلين حالياً</h3>
+                                    <p>يمكنك إضافة مستخدم جديد من خلال زر "إضافة مستخدم جديد"</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SweetAlert JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            particlesJS('particles-js', {
+                particles: {
+                    number: { value: 80, density: { enable: true, value_area: 800 } },
+                    color: { value: "#6366f1" },
+                    shape: { type: "circle" },
+                    opacity: { value: 0.3, random: true },
+                    size: { value: 3, random: true },
+                    line_linked: { enable: true, distance: 150, color: "#6366f1", opacity: 0.2, width: 1 },
+                    move: { enable: true, speed: 2, direction: "none", random: true }
+                }
+            });
+
+            updateStats();
+            setupDeleteButtons();
+        });
+
+        function updateStats() {
+            const rows = document.querySelectorAll('.user-row');
+            let trainers = 0, cadets = 0, others = 0;
+
+            rows.forEach(row => {
+                const rank = row.getAttribute('data-rank');
+                if (rank === 'trainer') {
+                    trainers++;
+                } else if (rank === 'cadet') {
+                    cadets++;
+                } else {
+                    others++;
+                }
+            });
+
+            animateCounter('trainersCount', trainers);
+            animateCounter('cadetsCount', cadets);
+            animateCounter('othersCount', others);
+        }
+
+        function animateCounter(elementId, finalValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const duration = 1000;
+            const start = 0;
+            const increment = finalValue / (duration / 16);
+            let current = start;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= finalValue) {
+                    element.textContent = finalValue;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+            }, 16);
+        }
+
+        function filterUsers(filter) {
+            const buttons = document.querySelectorAll('.filter-btn');
+            const rows = document.querySelectorAll('.user-row');
+
+            // تحديث حالة الأزرار
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-filter') === filter) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // تصفية الصفوف
+            rows.forEach(row => {
+                const rank = row.getAttribute('data-rank');
+                let showRow = false;
+
+                switch(filter) {
+                    case 'all':
+                        showRow = true;
+                        break;
+                    case 'trainer':
+                        showRow = (rank === 'trainer');
+                        break;
+                    case 'cadet':
+                        showRow = (rank === 'cadet');
+                        break;
+                    case 'other':
+                        showRow = (rank !== 'trainer' && rank !== 'cadet');
+                        break;
+                }
+
+                if (showRow) {
+                    row.style.display = '';
+                    row.style.animation = 'fadeIn 0.5s ease';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function setupDeleteButtons() {
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const userId = this.getAttribute('data-user-id');
+                    const userName = this.getAttribute('data-user-name');
+                    
+                    showDeleteConfirmation(userId, userName);
+                });
+            });
+        }
+
+        function showDeleteConfirmation(userId, userName) {
+            Swal.fire({
+                title: 'حذف المستخدم',
+                html: `
+                    <div style="text-align: center;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                        <p style="font-size: 1.2rem; color: #e2e8f0; margin-bottom: 0.5rem;">
+                            هل أنت متأكد من حذف المستخدم؟
+                        </p>
+                        <p style="color: #94a3b8; margin-bottom: 1.5rem;">
+                            <strong style="color: #fca5a5;">${userName}</strong>
+                            <br>
+                            لا يمكن التراجع عن هذا الإجراء
+                        </p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، احذف',
+                cancelButtonText: 'إلغاء',
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: 'swal2-confirm',
+                    cancelButton: 'swal2-cancel',
+                    actions: 'swal2-actions',
+                    popup: 'swal2-popup'
+                },
+                buttonsStyling: false,
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // عند تأكيد الحذف، نقوم بتوجيه المستخدم إلى رابط الحذف
+                    window.location.href = `/admin/delete-user/${userId}/`;
+                }
+            });
+        }
+
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
